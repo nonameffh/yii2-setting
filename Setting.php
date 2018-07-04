@@ -28,6 +28,21 @@ class Setting extends \yii\base\Component {
 	protected $_cacheFlush = array ();
 	protected $_items = array ();
 
+
+	public function migrate() {
+		Yii::$app->db->createCommand (
+			\Yii::$app->getDb()->getQueryBuilder()->createTable ( "{{%" . $this->settingTable . "}}", [
+				'category' => Schema::TYPE_STRING,
+				'key' => Schema::TYPE_STRING,
+				'value' => Schema::TYPE_TEXT,
+			]
+		)
+		 )->execute ();
+		Yii::$app->db->createCommand (
+			Yii::$app->getDb ()->getQueryBuilder()->addPrimaryKey( 'category_key', "{{%" . $this->settingTable . "}}", 'category,key' )
+		)->execute ();
+	}
+
 	/**
 	 * Setting::init()
 	 *
@@ -35,19 +50,6 @@ class Setting extends \yii\base\Component {
 	 *
 	 */
 	public function init() {
-		if (YII_DEBUG && ! Yii::$app->getDb ()->getTableSchema ( "{{%" . $this->settingTable . "}}" )) {
-			Yii::$app->db->createCommand (
-				\Yii::$app->getDb()->getQueryBuilder()->createTable ( "{{%" . $this->settingTable . "}}", [
-					'category' => Schema::TYPE_STRING,
-					'key' => Schema::TYPE_STRING,
-					'value' => Schema::TYPE_TEXT,
-				]
-			)
-			 )->execute ();
-			Yii::$app->db->createCommand (
-				Yii::$app->getDb ()->getQueryBuilder()->addPrimaryKey( 'category_key', "{{%" . $this->settingTable . "}}", 'category,key' )
-			)->execute ();
-		}
 		$this->on (Application::EVENT_AFTER_REQUEST, [$this, 'commit']);
 	}
 
